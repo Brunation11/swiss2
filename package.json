@@ -1,0 +1,43 @@
+{
+  "name": "swiss2",
+  "version": "1.0.0",
+  "description": "\"A bookmark management application that allows users to import their bookmarks and add new ones through a companion browser extension. An ElasticSearch Java server allows for real time database querying by name, url, and any keywords or sentences featured within the content of the bookmarked page. From search results, users are able to render live previews of the webpage directly within the application.\"",
+  "main": "test.js",
+  "scripts": {
+    "test": "mocha server/spec.js",
+    "start": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Brunation11/swiss2.git"
+  },
+  "author": "Brunation11",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Brunation11/swiss2/issues"
+  },
+  "homepage": "https://github.com/Brunation11/swiss2#readme",
+  "dependencies": {
+    "body-parser": "^1.15.0",
+    "bookmarks-parser": "0.0.2",
+    "colors": "^1.1.2",
+    "connect-assets": "^5.1.0",
+    "consolidate": "^0.14.0",
+    "cors": "^2.7.1",
+    "dateformat": "^1.0.12",
+    "ejs": "^2.4.1",
+    "express": "^4.13.4",
+    "jsonwebtoken": "^5.7.0",
+    "lodash": "^4.6.1",
+    "method-override": "^2.3.5",
+    "mongoose": "^4.4.7",
+    "morgan": "^1.7.0",
+    "passport": "^0.3.2",
+    "passport-local": "^1.0.0",
+    "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "supertest": "^1.2.0"
+  }
+}
