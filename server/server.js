@@ -15,7 +15,7 @@ app.get('/', function(req, res) {
   res.render('index');
 });
 
-app.user('/auth', userRouter);
+app.use('/auth', userRouter);
 
 app.use(function(err, req, res, next) {
   if (err.name === 'UnauthorizedError') {
