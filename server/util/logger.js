@@ -12,7 +12,7 @@ var logger = {
       .map(function(arg) {
         if (typeof arg === 'object') {
           var string = JSON.stringify(arg, null, 2);
-          retrun string.cyn;
+          return string.cyan;
         } else {
           arg += '';
           return arg.cyan;
