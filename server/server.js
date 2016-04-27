@@ -3,7 +3,8 @@ var express = require('express'),
     config = require('./config/config'),
     logger = require('./util/logger'),
     passport = require('passport'),
-    userRouter = require('./api/user/routes');
+    userRouter = require('./api/user/routes'),
+    folderRouter = require('./api/folder/routes');
 
 require('mongoose').connect(config.db.url);
 require('./middleware/middleware')(app);
@@ -16,6 +17,7 @@ app.get('/', function(req, res) {
 });
 
 app.use('/auth', userRouter);
+app.use('/folders', folderRouter)
 
 app.use(function(err, req, res, next) {
   if (err.name === 'UnauthorizedError') {
