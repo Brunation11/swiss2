@@ -1,4 +1,4 @@
-var config = require('/server/config/config'),
+var config = require('./server/config/config'),
     app = require('./server/server'),
     logger = require('./server/util/logger');
 
