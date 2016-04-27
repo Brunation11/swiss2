@@ -1,6 +1,7 @@
-var app = require('../../server');
-var request = require('supertest');
-var expect = require('chai').expect;
+var app = require('../../server'),
+    request = require('supertest'),
+    expect = require('chai').expect,
+    UserModel = require('./model');
 
 describe('[AUTHENTICATION]'.bold.green, function() {
   var userData = {
@@ -8,6 +9,11 @@ describe('[AUTHENTICATION]'.bold.green, function() {
     email: 'test',
     password: 'test'
   };
+
+  before(function(done) {
+    UserModel.collection.drop();
+    done();
+  });
 
   describe('#register()'.cyan, function() {
     it('allows new users to register', function(done) {
