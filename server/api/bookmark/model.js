@@ -19,22 +19,31 @@ var BookmarkSchema = new Schema({
   }
 });
 
+BookmarkSchema.methods = {
+  // setContent: function(req, res, body, next) {
+  //   var tagless = striptags(body),
+  //       spaceless = tagless.replace(/\s+/g, ' ');
+  //   this.content = spaceless;
+  //   this.save(function(err, saved) {
+  //     if (err) {
+  //       next(err);
+  //     } else {
+  //       res.json(saved);
+  //     }
+  //   });
+
+    // var tagless = striptags(body),
+    //     spaceless = tagless.replace(/\s+/g, ' ');
+    // this.content = spaceless;
+    // this.save(function(err, saved) {
+    //   if (err) {
+    //     next(err);
+    //   }
+    // });
+  // }
+};
+
 BookmarkSchema.plugin(mongoosastic);
 BookmarkSchema.plugin(findOrCreate);
-
-BookmarkSchema.pre('save', function(next) {
-  this.content = this.assignContent(this.url);
-  next();
-});
-
-BookmarkSchema.methods = {
-  assignContent: function(url) {
-    request(url, function(err, res, body) {
-      var tagless = striptags(body);
-      var spaceless = tagless.replace(/\s+/g, ' ');
-      return spaceless;
-    });
-  }
-};
 
 module.exports = mongoose.model('Bookmark', BookmarkSchema);
