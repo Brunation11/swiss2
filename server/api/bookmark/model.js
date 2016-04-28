@@ -7,6 +7,10 @@ var fs = require('fs'),
     Schema = mongoose.Schema;
 
 var BookmarkSchema = new Schema({
+  name: {
+    type: String,
+    required: true
+  },
   url: {
     type: String,
     required: true,
@@ -20,28 +24,39 @@ var BookmarkSchema = new Schema({
 });
 
 BookmarkSchema.methods = {
-  // setContent: function(req, res, body, next) {
-  //   var tagless = striptags(body),
-  //       spaceless = tagless.replace(/\s+/g, ' ');
-  //   this.content = spaceless;
-  //   this.save(function(err, saved) {
-  //     if (err) {
-  //       next(err);
-  //     } else {
-  //       res.json(saved);
-  //     }
-  //   });
-
-    // var tagless = striptags(body),
-    //     spaceless = tagless.replace(/\s+/g, ' ');
-    // this.content = spaceless;
-    // this.save(function(err, saved) {
-    //   if (err) {
-    //     next(err);
-    //   }
-    // });
-  // }
+  validateName: function(next) {
+    if (this.name) {
+      next();
+    } else {
+      this.name = this.url;
+      next();
+    }
+  },
+  getContent: function(req, res, body) {
+    this.setContent(body);
+    this.save(function(err, saved) {
+      if (err) {
+        next(err);
+      } else {
+        req.folder.bookmarks.push(saved._id);
+        req.folder.save(function(err, folder) {
+          if (err) {
+            next(err);
+          } else {
+            res.json(saved);
+          }
+        });
+      }
+    });
+  },
+  setContent: function(body) {
+    this.content = striptags(body).replace(/\s+/g, ' ');
+  }
 };
+
+BookmarkSchema.pre('validate', function(next) {
+  this.validateName(next);
+});
 
 BookmarkSchema.plugin(mongoosastic);
 BookmarkSchema.plugin(findOrCreate);
