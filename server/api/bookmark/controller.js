@@ -1,5 +1,7 @@
 var BookmarkModel = require('./model'),
-    _ = require('lodash');
+    _ = require('lodash'),
+    request = require('request'),
+    striptags = require('striptags');
 
 exports.params = function(req, res, next, id) {
   BookmarkModel.findById(id)
@@ -15,83 +17,60 @@ exports.params = function(req, res, next, id) {
     });
 };
 
-// will never be used since bookmarks will be populated by the respective folder
 exports.get = function(req, res, next) {
   res.json(req.folder.bookmarks);
 };
 
-
 exports.post = function(req, res, next) {
-  // BookmarkModel.findOrCreate(req.body, function(err, bookmark, created) {
-  BookmarkModel.findOne(req.body, function(err, bookmark) {
+  BookmarkModel.findOrCreate(req.body, function(err, bookmark, created) {
     if (err) {
       next(err);
-    } else if (!bookmark) {
-      var newBookmark = new BookmarkModel(req.body);
-      newBookmark.save(function(err, savedBookmark) {
-        console.log(savedBookmark);
-        if (err) {
-          next(err);
-        } else {
-          var folder = req.folder;
-          folder.bookmarks.push(savedBookmark._id);
-          folder.save(function(err, folder) {
-            if (err) {
-              next(err);
-            } else {
-              res.json(savedBookmark);
-            }
-          });
-        }
-      });
     } else {
-      var folder = req.folder;
-      folder.bookmarks.push(bookmark._id);
-      folder.save(function(err, folder) {
-        if (err) {
-          next(err);
-        } else {
-          res.json(savedBookmark);
-        }
-      });
+      if (created) {
+        request(bookmark.url, function(err, response, body) {
+          if (err) {
+            next(err);
+          } else {
+            // bookmark.setContent(body, next);
+            var tagless = striptags(body),
+                spaceless = tagless.replace(/\s+/g, ' ');
+            bookmark.content = spaceless;
+            bookmark.save(function(err, saved) {
+              if (err) {
+                next(err);
+              } else {
+                var folder = req.folder;
+                folder.bookmarks.push(saved._id);
+                folder.save(function(err, folder) {
+                  if (err) {
+                    next(err);
+                  } else {
+                    res.json(saved);
+                  }
+                });
+              }
+            });
+          }
+        });
+      } else {
+        var folder = req.folder;
+        folder.bookmarks.push(bookmark._id);
+        folder.save(function(err, folder) {
+          if (err) {
+            next(err);
+          } else {
+            res.json(bookmark);
+          }
+        });
+      }
     }
   });
 };
 
-
-// // check for existance of bookmark before creating
-// exports.post = function(req, res, next) {
-//   BookmarkModel.findOrCreate(req.body, function(err, bookmark, created) {
-//     if (err) {
-//       next(err);
-//     } else {
-//       if (created) {
-//         bookmark.setContent(function(err, bookmark) {
-//           if (err) {
-//             next(err);
-//           } else {
-//             var folder = req.folder;
-//             folder.bookmarks.push(bookmark._id);
-//             folder.save(function(err, folder) {
-//               if (err) {
-//                 next(err);
-//               } else {
-//                 res.json(bookmark);
-//               }
-//             });
-//           }
-//         });
-//       }
-//     }
-//   });
-// };
-
-// get a specified bookmark
 exports.getOne = function(req, res) {
   res.json(req.bookmark);
 };
 
-// updated a specified bookmark
 exports.put = function(req, res, next) {
   var bookmark = req.bookmark,
       update = req.body;
@@ -105,7 +84,6 @@ exports.put = function(req, res, next) {
   });
 };
 
-// delete a specified bookmark, currently deletes record, will need to be reworked to only remove association
 exports.delete = function(req, res, next) {
   req.bookmark.remove(function(err, bookmark) {
     if (err) {
