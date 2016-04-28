@@ -17,27 +17,74 @@ exports.params = function(req, res, next, id) {
 
 // will never be used since bookmarks will be populated by the respective folder
 exports.get = function(req, res, next) {
-  BookmarkModel.find({})
-    .exec(function(err, bookmarks) {
-      if (err) {
-        next(err);
-      } else {
-        res.json(bookmarks);
-      }
-    });
+  res.json(req.folder.bookmarks);
 };
 
-// check for existance of bookmark before creating
+
 exports.post = function(req, res, next) {
-  BookmarkModel.findOrCreate({url: req.url}, function(err, bookmark, created) {
+  // BookmarkModel.findOrCreate(req.body, function(err, bookmark, created) {
+  BookmarkModel.findOne(req.body, function(err, bookmark) {
     if (err) {
       next(err);
+    } else if (!bookmark) {
+      var newBookmark = new BookmarkModel(req.body);
+      newBookmark.save(function(err, savedBookmark) {
+        console.log(savedBookmark);
+        if (err) {
+          next(err);
+        } else {
+          var folder = req.folder;
+          folder.bookmarks.push(savedBookmark._id);
+          folder.save(function(err, folder) {
+            if (err) {
+              next(err);
+            } else {
+              res.json(savedBookmark);
+            }
+          });
+        }
+      });
     } else {
-      res.json(bookmark);
-      next();
+      var folder = req.folder;
+      folder.bookmarks.push(bookmark._id);
+      folder.save(function(err, folder) {
+        if (err) {
+          next(err);
+        } else {
+          res.json(savedBookmark);
+        }
+      });
     }
   });
 };
+
+
+// // check for existance of bookmark before creating
+// exports.post = function(req, res, next) {
+//   BookmarkModel.findOrCreate(req.body, function(err, bookmark, created) {
+//     if (err) {
+//       next(err);
+//     } else {
+//       if (created) {
+//         bookmark.setContent(function(err, bookmark) {
+//           if (err) {
+//             next(err);
+//           } else {
+//             var folder = req.folder;
+//             folder.bookmarks.push(bookmark._id);
+//             folder.save(function(err, folder) {
+//               if (err) {
+//                 next(err);
+//               } else {
+//                 res.json(bookmark);
+//               }
+//             });
+//           }
+//         });
+//       }
+//     }
+//   });
+// };
 
 // get a specified bookmark
 exports.getOne = function(req, res) {
