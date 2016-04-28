@@ -13,26 +13,28 @@ var BookmarkSchema = new Schema({
     unique: true
   },
   content: {
-    type: String,
-    required: true,
-    es_indexed: true
+    type: String
+    // required: true
+    // es_indexed: true
   }
 });
 
 BookmarkSchema.plugin(mongoosastic);
 BookmarkSchema.plugin(findOrCreate);
 
-
 BookmarkSchema.pre('save', function(next) {
-  request(self.url, function(err, res, body) {
-    if (err) {
-      console.log(err);
-    }
-    tagless = striptags(body);
-    spaceless = tagless.replace(/\s+/g, ' ');
-    self.content = spaceless;
-  });
+  this.content = this.assignContent(this.url);
   next();
 });
+
+BookmarkSchema.methods = {
+  assignContent: function(url) {
+    request(url, function(err, res, body) {
+      var tagless = striptags(body);
+      var spaceless = tagless.replace(/\s+/g, ' ');
+      return spaceless;
+    });
+  }
+};
 
 module.exports = mongoose.model('Bookmark', BookmarkSchema);
