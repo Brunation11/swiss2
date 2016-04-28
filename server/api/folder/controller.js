@@ -4,7 +4,8 @@ var UserModel = require('../user/model'),
 
 exports.params = function(req, res, next, id) {
   FolderModel.findById(id)
-    .deepPopulate('user folders.bookmarks bookmarks', function(err, folder) {
+    .deepPopulate('user folders.bookmarks bookmarks')
+    .exec(function(err, folder) {
       if (err) {
         next(err);
       } else if (!folder) {
@@ -17,13 +18,12 @@ exports.params = function(req, res, next, id) {
 };
 
 exports.get = function(req, res, next) {
-  FolderModel.find({author: req.payload._id})
-    .deepPopulate('user')
+  FolderModel.find({user: req.payload._id})
+    .deepPopulate('user bookmarks folder.bookmarks')
     .exec(function(err, folders) {
       if (err) {
         next(err);
       } else {
-        console.log(folders);
         res.json(folders);
       }
     });
@@ -37,7 +37,13 @@ exports.post = function(req, res, next) {
       res.status(400).json({error: 'Looks like there was a problem trying to save your folder'});
       next(err);
     } else {
-      res.json(folder);
+      folder.deepPopulate('user bookmarks folder.bookmarks', function(err, folder) {
+        if (err) {
+          next(err);
+        } else {
+          res.json(folder);
+        }
+      });
     }
   });
 };
