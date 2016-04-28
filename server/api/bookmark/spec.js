@@ -1,5 +1,5 @@
 var app = require('../../server'),
-    request = require('supertest'),
+    supertest = require('supertest'),
     expect = require('chai').expect,
     UserModel = require('../user/model'),
     FolderModel = require('../folder/model'),
@@ -23,12 +23,12 @@ describe('[BOOKMARKS]'.bold.green, function() {
 
   before(function(done) {
     UserModel.collection.drop();
-    request(app)
+    supertest(app)
       .post('/auth/register')
       .send(userData)
       .set('Accept', 'application/json')
       .end(function() {
-        request(app)
+        supertest(app)
           .post('/auth/login')
           .send(userData)
           .set('Accept', 'application/json')
@@ -43,19 +43,18 @@ describe('[BOOKMARKS]'.bold.green, function() {
     FolderModel.collection.drop();
     BookmarkModel.collection.drop();
 
-    request(app)
+    supertest(app)
       .post('/folders')
       .send(folderData)
       .set({Accept: 'application/json', Authorization: token})
       .end(function(err, res) {
         folder = res.body;
-        request(app)
+        supertest(app)
           .post('/folders/' + folder._id + '/bookmarks')
           .send(bookmarkData)
           .set({Accept: 'application/json', Authorization: token})
           .end(function(err, res) {
             bookmark = res.body;
-            console.log(bookmark);
             done();
           });
       });
@@ -63,13 +62,14 @@ describe('[BOOKMARKS]'.bold.green, function() {
 
   describe('#get()'.cyan, function() {
     it('should get all bookmarks', function(done) {
-      request(app)
+      supertest(app)
         .get('/folders/' + folder._id + '/bookmarks')
         .set({Accept: 'application/json', Authorization: token})
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function(err, res) {
           expect(res.body).to.be.an('array');
+          expect(res.body[0]).to.have.property('name', bookmark.url);
           expect(res.body[0]).to.have.property('url', bookmark.url);
           expect(res.body.length).to.eql(1);
           done();
@@ -79,7 +79,7 @@ describe('[BOOKMARKS]'.bold.green, function() {
 
   describe('#post()'.cyan, function() {
     it('should create a new bookmark', function(done) {
-      request(app)
+      supertest(app)
         .post('/folders/' + folder._id + '/bookmarks')
         .send(bookmarkData)
         .set({Accept: 'application/json', Authorization: token})
@@ -95,7 +95,7 @@ describe('[BOOKMARKS]'.bold.green, function() {
 
   describe('#getOne()'.cyan, function() {
     it('should get a single bookmark', function(done) {
-      request(app)
+      supertest(app)
         .get('/folders/' + folder._id + '/bookmarks/' + bookmark._id)
         .set({Accept: 'application/json', Authorization: token})
         .expect('Content-Type', /json/)
@@ -110,15 +110,17 @@ describe('[BOOKMARKS]'.bold.green, function() {
   describe('#put()'.cyan, function() {
     it('should update a specific bookmark', function(done) {
       var update = {
+        name: 'portfolio',
         url: 'https://www.google.com/'
       };
-      request(app)
+      supertest(app)
         .put('/folders/' + folder._id + '/bookmarks/' + bookmark._id)
         .send(update)
         .set({Accept: 'application/json', Authorization: token})
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function(err, res) {
+          expect(res.body).to.have.property('name', update.name);
           expect(res.body).to.have.property('url', update.url);
           done();
         });
@@ -127,14 +129,14 @@ describe('[BOOKMARKS]'.bold.green, function() {
 
   describe('#delete()'.cyan, function() {
     it('should delete a specific bookmark', function(done) {
-      request(app)
+      supertest(app)
         .delete('/folders/' + folder._id + '/bookmarks/' + bookmark._id)
         .set({Accept: 'application/json', Authorization: token})
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function(err, res) {
           expect(res.body).to.eql(bookmark);
-          request(app)
+          supertest(app)
             .get('/folders/' + folder._id + '/bookmarks')
             .set({Accept: 'application/json', Authorization: token})
             .end(function(err, res) {
