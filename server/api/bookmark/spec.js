@@ -88,6 +88,8 @@ describe('[BOOKMARKS]'.bold.green, function() {
         .end(function(err, res) {
           expect(res.body).to.be.an('object');
           expect(res.body).to.have.property('url', bookmarkData.url);
+          expect(res.body).to.have.property('name', bookmarkData.url);
+          expect(res.body).to.have.property('content');
           done();
         });
     });
