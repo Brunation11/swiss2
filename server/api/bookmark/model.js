@@ -17,9 +17,9 @@ var BookmarkSchema = new Schema({
     unique: true
   },
   content: {
-    type: String
-    // required: true
-    // es_indexed: true
+    type: String,
+    // required: true,
+    es_indexed: true
   }
 });
 
@@ -33,11 +33,17 @@ BookmarkSchema.methods = {
     }
   },
   getContent: function(req, res, body) {
-    this.setContent(body);
-    this.save(function(err, saved) {
+    var instance = this;
+    instance.setContent(body);
+    instance.save(function(err, saved) {
       if (err) {
         next(err);
       } else {
+        instance.on('es-indexed', function(err, response) {
+          if (err) {
+            next(err);
+          }
+        });
         req.folder.bookmarks.push(saved._id);
         req.folder.save(function(err, folder) {
           if (err) {
