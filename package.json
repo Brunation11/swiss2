@@ -27,6 +27,7 @@
     "dateformat": "^1.0.12",
     "ejs": "^2.4.1",
     "express": "^4.13.4",
+    "faker": "^3.1.0",
     "jsonwebtoken": "^5.7.0",
     "lodash": "^4.6.1",
     "method-override": "^2.3.5",
