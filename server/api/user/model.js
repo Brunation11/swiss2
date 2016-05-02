@@ -53,7 +53,9 @@ UserSchema.methods = {
     if (validator.isEmail(this.email)) {
       next();
     } else {
-      next(new Error("invalid email"));
+      var error = new Error("invalid email");
+      res.status(409).json({error: error});
+      next(error);
     }
   },
   setPassword: function(password) {
@@ -68,6 +70,7 @@ UserSchema.methods = {
     return jwt.sign({
       _id: this._id,
       username: this.username,
+      rootFolder: this.rootFolder,
       exp: config.exp
     }, config.secrets.jwt);
   }
