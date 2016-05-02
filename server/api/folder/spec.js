@@ -1,23 +1,27 @@
 var app = require('../../server'),
     request = require('supertest'),
     expect = require('chai').expect,
+    faker = require('faker'),
     UserModel = require('../user/model'),
     FolderModel = require('./model');
 
 describe('[FOLDERS]'.bold.green, function() {
   var token,
       userData = {
-        username: 'username-test',
-        password: 'password-test',
-        email: 'email-test'
+        firstName: faker.name.firstName(),
+        lastName: faker.name.lastName(),
+        username: faker.internet.userName(),
+        email: faker.internet.email(),
+        password: faker.internet.password()
       },
       folder,
       folderData = {
-        name: 'folderName-test'
+        name: faker.lorem.word()
       };
 
   before(function(done) {
     UserModel.collection.drop();
+    FolderModel.collection.drop();
     request(app)
       .post('/auth/register')
       .send(userData)
@@ -29,20 +33,15 @@ describe('[FOLDERS]'.bold.green, function() {
           .set('Accept', 'application/json')
           .end(function(err, res) {
             token = res.body.token;
-            done();
+            request(app)
+              .post('/folders')
+              .send(folderData)
+              .set({Accept: 'application/json', Authorization: token})
+              .end(function(err, res) {
+                folder = res.body;
+                done();
+              });
           });
-      });
-  });
-
-  beforeEach(function(done) {
-    FolderModel.collection.drop();
-    request(app)
-      .post('/folders')
-      .send(folderData)
-      .set({Accept: 'application/json', Authorization: token})
-      .end(function(err, res) {
-        folder = res.body;
-        done();
       });
   });
 
@@ -55,8 +54,8 @@ describe('[FOLDERS]'.bold.green, function() {
         .expect(200)
         .end(function(err, res) {
           expect(res.body).to.be.an('array');
-          expect(res.body.length).to.eql(1);
-          expect(res.body[0]).to.eql(folder);
+          expect(res.body).to.have.length.above(1);
+          expect(res.body[1]).to.eql(folder);
           done();
         });
     });
@@ -86,7 +85,8 @@ describe('[FOLDERS]'.bold.green, function() {
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function(err, res) {
-          expect(res.body).to.eql(folder);
+          expect(res.body).to.have.property('_id', folder._id);
+          expect(res.body).to.have.property('name', folder.name);
           done();
         });
     });
@@ -120,14 +120,8 @@ describe('[FOLDERS]'.bold.green, function() {
         .expect('Content-type', /json/)
         .expect(200)
         .end(function(err, res) {
-          expect(res.body).to.eql(folder);
-          request(app)
-            .get('/folders')
-            .set({Accept: 'application/json', Authorization: token})
-            .end(function(err, res) {
-              expect(res.body.length).to.eql(0);
-              done();
-            });
+          expect(res.body).to.have.property('_id', folder._id);
+          done();
         });
     });
   });
