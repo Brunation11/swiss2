@@ -1,6 +1,7 @@
 var app = require('../../server'),
     supertest = require('supertest'),
     expect = require('chai').expect,
+    faker = require('faker'),
     UserModel = require('../user/model'),
     FolderModel = require('../folder/model'),
     BookmarkModel = require('./model');
@@ -8,21 +9,25 @@ var app = require('../../server'),
 describe('[BOOKMARKS]'.bold.green, function() {
   var token,
       userData = {
-        username: 'username-test',
-        password: 'password-test',
-        email: 'email-test'
+        firstName: faker.name.firstName(),
+        lastName: faker.name.lastName(),
+        username: faker.internet.userName(),
+        email: faker.internet.email(),
+        password: faker.internet.password()
       },
       folder,
       folderData = {
-        name: 'folder-test'
+        name: faker.lorem.word()
       },
       bookmark,
       bookmarkData = {
-        url: 'http://www.brunozatta.com/'
+        url: 'http://brunozatta.com'
       };
 
   before(function(done) {
     UserModel.collection.drop();
+    FolderModel.collection.drop();
+    BookmarkModel.collection.drop();
     supertest(app)
       .post('/auth/register')
       .send(userData)
@@ -34,29 +39,26 @@ describe('[BOOKMARKS]'.bold.green, function() {
           .set('Accept', 'application/json')
           .end(function(err, res) {
             token = res.body.token;
-            done();
+            supertest(app)
+              .post('/folders')
+              .send(folderData)
+              .set({Accept: 'application/json', Authorization: token})
+              .end(function(err, res) {
+                folder = res.body;
+                done();
+              });
           });
       });
   });
 
   beforeEach(function(done) {
-    FolderModel.collection.drop();
-    BookmarkModel.collection.drop();
-
     supertest(app)
-      .post('/folders')
-      .send(folderData)
+      .post('/folders/' + folder._id + '/bookmarks')
+      .send(bookmarkData)
       .set({Accept: 'application/json', Authorization: token})
       .end(function(err, res) {
-        folder = res.body;
-        supertest(app)
-          .post('/folders/' + folder._id + '/bookmarks')
-          .send(bookmarkData)
-          .set({Accept: 'application/json', Authorization: token})
-          .end(function(err, res) {
-            bookmark = res.body;
-            done();
-          });
+        bookmark = res.body;
+        done();
       });
   });
 
@@ -138,13 +140,7 @@ describe('[BOOKMARKS]'.bold.green, function() {
         .expect(200)
         .end(function(err, res) {
           expect(res.body).to.eql(bookmark);
-          supertest(app)
-            .get('/folders/' + folder._id + '/bookmarks')
-            .set({Accept: 'application/json', Authorization: token})
-            .end(function(err, res) {
-              expect(res.body.length).to.eql(0);
-              done();
-            });
+          done();
         });
     });
   });
