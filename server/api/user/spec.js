@@ -1,16 +1,17 @@
 var app = require('../../server'),
     request = require('supertest'),
+    faker = require('faker'),
     expect = require('chai').expect,
     UserModel = require('./model'),
     FolderModel = require('../folder/model');
 
 describe('[USER]'.bold.green, function() {
   var userData = {
-    firstName: 'first-name-test',
-    lastName: 'last-name-test',
-    username: 'test',
-    email: 'test@gmail.com',
-    password: 'test'
+            firstName: faker.name.firstName(),
+        lastName: faker.name.lastName(),
+        username: faker.internet.userName(),
+        email: faker.internet.email(),
+        password: faker.internet.password()
   };
 
   describe('Model'.green, function() {
