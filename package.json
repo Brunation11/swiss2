@@ -27,6 +27,7 @@
     "dateformat": "^1.0.12",
     "ejs": "^2.4.1",
     "express": "^4.13.4",
+    "faker": "^3.1.0",
     "jsonwebtoken": "^5.7.0",
     "lodash": "^4.6.1",
     "method-override": "^2.3.5",
@@ -39,7 +40,8 @@
     "passport-local": "^1.0.0",
     "path": "^0.12.7",
     "request": "^2.72.0",
-    "striptags": "^2.1.1"
+    "striptags": "^2.1.1",
+    "validator": "^5.2.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",

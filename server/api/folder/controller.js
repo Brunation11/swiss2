@@ -9,7 +9,9 @@ exports.params = function(req, res, next, id) {
       if (err) {
         next(err);
       } else if (!folder) {
-        next(new Error('Folder not found'));
+        var error = new Error('Folder not found');
+        res.status(409).json({error: error});
+        next(error);
       } else {
         req.folder = folder;
         next();
@@ -18,32 +20,46 @@ exports.params = function(req, res, next, id) {
 };
 
 exports.get = function(req, res, next) {
-  FolderModel.find({user: req.payload._id})
-    .deepPopulate('user bookmarks folder.bookmarks')
-    .exec(function(err, folders) {
-      if (err) {
-        next(err);
-      } else {
-        res.json(folders);
-      }
-    });
+  FolderModel.find({user: req.payload._id}, function(err, folders) {
+    if (err) {
+      next(err);
+    } else if (!folders) {
+      var error = new Error('No folders found');
+      res.status(409).json({error: error});
+      next(error);
+    } else {
+      res.json(folders);
+      next();
+    }
+  });
 };
 
 exports.post = function(req, res, next) {
   var folder = new FolderModel(req.body);
   folder.user = req.payload._id;
-  folder.save(function(err, folder) {
+  folder.save(function(err, savedFolder) {
     if (err) {
       res.status(400).json({error: 'Looks like there was a problem trying to save your folder'});
       next(err);
     } else {
-      folder.deepPopulate('user bookmarks folder.bookmarks', function(err, folder) {
-        if (err) {
-          next(err);
-        } else {
-          res.json(folder);
-        }
-      });
+      if (req.folder) {
+        req.folder.folders.push(savedFolder._id);
+        req.folder.save(function(err, savedParentFolder) {
+          if (err) {
+            next(err);
+          }
+        });
+      } else {
+        FolderModel.findById(req.payload.rootFolder, function(err, rootFolder) {
+          rootFolder.folders.push(savedFolder._id);
+          rootFolder.save(function(err, savedRootFolder) {
+            if (err) {
+              next(err);
+            }
+          });
+        });
+      }
+      res.json(savedFolder);
     }
   });
 };

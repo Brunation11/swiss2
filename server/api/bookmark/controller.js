@@ -31,25 +31,7 @@ exports.post = function(req, res, next) {
           if (err) {
             next(err);
           } else {
-            // bookmark.setContent(body, next);
-            var tagless = striptags(body),
-                spaceless = tagless.replace(/\s+/g, ' ');
-            bookmark.content = spaceless;
-            bookmark.save(function(err, saved) {
-              if (err) {
-                next(err);
-              } else {
-                var folder = req.folder;
-                folder.bookmarks.push(saved._id);
-                folder.save(function(err, folder) {
-                  if (err) {
-                    next(err);
-                  } else {
-                    res.json(saved);
-                  }
-                });
-              }
-            });
+            bookmark.getContent(req, res, body);
           }
         });
       } else {
