@@ -4,7 +4,8 @@ var fs = require('fs'),
     mongoosastic = require('mongoosastic'),
     findOrCreate = require('mongoose-findorcreate'),
     mongoose = require('mongoose'),
-    Schema = mongoose.Schema;
+    Schema = mongoose.Schema,
+    UserModel = require('../user/model');
 
 var BookmarkSchema = new Schema({
   name: {
@@ -20,7 +21,13 @@ var BookmarkSchema = new Schema({
     type: String,
     // required: true,
     es_indexed: true
-  }
+  },
+  tags: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Tag'
+    }
+  ]
 });
 
 BookmarkSchema.methods = {
@@ -44,14 +51,21 @@ BookmarkSchema.methods = {
             next(err);
           }
         });
-        req.folder.bookmarks.push(saved._id);
-        req.folder.save(function(err, folder) {
-          if (err) {
-            next(err);
-          } else {
-            res.json(saved);
-          }
-        });
+        UserModel.findById(req.payload._id)
+          .exec(function(err, user) {
+            if (err) {
+              next(err);
+            } else {
+              user.bookmarks.push(saved);
+              user.save(function(err, user) {
+                if (err) {
+                  next (err);
+                } else {
+                  res.json(saved);
+                }
+              });
+            }
+          });
       }
     });
   },
