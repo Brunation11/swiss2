@@ -4,7 +4,6 @@ var config = require('../../config/config'),
     validator = require('validator'),
     mongoose = require('mongoose'),
     Schema = mongoose.Schema;
-    FolderModel = require('../folder/model');
 
 var UserSchema = new Schema({
   firstName: {
@@ -25,12 +24,12 @@ var UserSchema = new Schema({
     unique: true,
     required: true,
   },
-  rootFolder: {
-    type: Schema.Types.ObjectId,
-    ref: 'Folder',
-    required: true
-
-  },
+  bookmarks: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Bookmark'
+    }
+  ],
   hash: String,
   salt: String
 });
@@ -38,16 +37,6 @@ var UserSchema = new Schema({
 UserSchema.methods = {
   fullName: function() {
     return this.firstName + " " + this.lastName;
-  },
-  getRootFolder: function() {
-    var user = this,
-        folder = new FolderModel({name: user.username, user: user._id})
-    folder.save();
-    return folder;
-  },
-  setRootFolder: function(next) {
-    this.rootFolder = this.getRootFolder()._id;
-    next();
   },
   validateEmail: function(next) {
     if (validator.isEmail(this.email)) {
@@ -75,10 +64,6 @@ UserSchema.methods = {
     }, config.secrets.jwt);
   }
 };
-
-UserSchema.pre('validate', function(next) {
-  this.setRootFolder(next);
-});
 
 UserSchema.pre('save', function(next) {
   this.validateEmail(next);
