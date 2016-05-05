@@ -4,7 +4,8 @@ var express = require('express'),
     logger = require('./util/logger'),
     passport = require('passport'),
     userRouter = require('./api/user/routes'),
-    folderRouter = require('./api/folder/routes');
+    bookmarkRouter = require('./api/bookmark/routes');
+    tagRouter = require('./api/tag/routes');
 
 require('mongoose').connect(config.db.url);
 require('./middleware/middleware')(app);
@@ -17,7 +18,8 @@ app.get('/', function(req, res) {
 });
 
 app.use('/auth', userRouter);
-app.use('/folders', folderRouter)
+app.use('/bookmarks', bookmarkRouter);
+app.use('/tags', tagRouter);
 
 app.use(function(err, req, res, next) {
   if (err.name === 'UnauthorizedError') {
