@@ -1,4 +1,5 @@
-var BookmarkModel = require('./model'),
+var UserModel = require('../user/model'),
+    BookmarkModel = require('./model'),
     _ = require('lodash'),
     request = require('request'),
     striptags = require('striptags');
@@ -18,7 +19,15 @@ exports.params = function(req, res, next, id) {
 };
 
 exports.get = function(req, res, next) {
-  res.json(req.folder.bookmarks);
+  UserModel.findById(req.payload._id)
+    .populate('bookmarks')
+    .exec(function(err, user) {
+      if (err) {
+        next(err);
+      } else {
+        res.json(user.bookmarks);
+      }
+    });
 };
 
 exports.post = function(req, res, next) {
@@ -35,15 +44,21 @@ exports.post = function(req, res, next) {
           }
         });
       } else {
-        var folder = req.folder;
-        folder.bookmarks.push(bookmark._id);
-        folder.save(function(err, folder) {
-          if (err) {
-            next(err);
-          } else {
-            res.json(bookmark);
-          }
-        });
+        UserModel.findById(req.payload._id)
+          .exec(function(err, user) {
+            if (err) {
+              next(err);
+            } else {
+              user.bookmarks.push(bookmark._id);
+              user.save(function(err, user) {
+                if (err) {
+                  next(err);
+                } else {
+                  res.json(bookmark);
+                }
+              });
+            }
+          });
       }
     }
   });

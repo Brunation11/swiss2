@@ -1,5 +1,4 @@
 var UserModel = require('./model'),
-    FolderModel = require('../folder/model'),
     passport = require('passport');
 
 exports.register = function(req, res, next) {

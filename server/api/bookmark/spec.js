@@ -3,7 +3,6 @@ var app = require('../../server'),
     expect = require('chai').expect,
     faker = require('faker'),
     UserModel = require('../user/model'),
-    FolderModel = require('../folder/model'),
     BookmarkModel = require('./model');
 
 describe('[BOOKMARKS]'.bold.green, function() {
@@ -15,10 +14,6 @@ describe('[BOOKMARKS]'.bold.green, function() {
         email: faker.internet.email(),
         password: faker.internet.password()
       },
-      folder,
-      folderData = {
-        name: faker.lorem.word()
-      },
       bookmark,
       bookmarkData = {
         url: 'http://brunozatta.com'
@@ -26,7 +21,6 @@ describe('[BOOKMARKS]'.bold.green, function() {
 
   before(function(done) {
     UserModel.collection.drop();
-    FolderModel.collection.drop();
     BookmarkModel.collection.drop();
     supertest(app)
       .post('/auth/register')
@@ -40,32 +34,21 @@ describe('[BOOKMARKS]'.bold.green, function() {
           .end(function(err, res) {
             token = res.body.token;
             supertest(app)
-              .post('/folders')
-              .send(folderData)
+              .post('/bookmarks')
+              .send(bookmarkData)
               .set({Accept: 'application/json', Authorization: token})
               .end(function(err, res) {
-                folder = res.body;
+                bookmark = res.body;
                 done();
               });
           });
       });
   });
 
-  beforeEach(function(done) {
-    supertest(app)
-      .post('/folders/' + folder._id + '/bookmarks')
-      .send(bookmarkData)
-      .set({Accept: 'application/json', Authorization: token})
-      .end(function(err, res) {
-        bookmark = res.body;
-        done();
-      });
-  });
-
   describe('#get()'.cyan, function() {
     it('should get all bookmarks', function(done) {
       supertest(app)
-        .get('/folders/' + folder._id + '/bookmarks')
+        .get('/bookmarks')
         .set({Accept: 'application/json', Authorization: token})
         .expect('Content-Type', /json/)
         .expect(200)
@@ -82,7 +65,7 @@ describe('[BOOKMARKS]'.bold.green, function() {
   describe('#post()'.cyan, function() {
     it('should create a new bookmark', function(done) {
       supertest(app)
-        .post('/folders/' + folder._id + '/bookmarks')
+        .post('/bookmarks')
         .send(bookmarkData)
         .set({Accept: 'application/json', Authorization: token})
         .expect('Content-Type', /json/)
@@ -100,7 +83,7 @@ describe('[BOOKMARKS]'.bold.green, function() {
   describe('#getOne()'.cyan, function() {
     it('should get a single bookmark', function(done) {
       supertest(app)
-        .get('/folders/' + folder._id + '/bookmarks/' + bookmark._id)
+        .get('/bookmarks/' + bookmark._id)
         .set({Accept: 'application/json', Authorization: token})
         .expect('Content-Type', /json/)
         .expect(200)
@@ -118,12 +101,13 @@ describe('[BOOKMARKS]'.bold.green, function() {
         url: 'https://www.google.com/'
       };
       supertest(app)
-        .put('/folders/' + folder._id + '/bookmarks/' + bookmark._id)
+        .put('/bookmarks/' + bookmark._id)
         .send(update)
         .set({Accept: 'application/json', Authorization: token})
         .expect('Content-Type', /json/)
         .expect(200)
         .end(function(err, res) {
+          bookmark = res.body;
           expect(res.body).to.have.property('name', update.name);
           expect(res.body).to.have.property('url', update.url);
           done();
@@ -134,7 +118,7 @@ describe('[BOOKMARKS]'.bold.green, function() {
   describe('#delete()'.cyan, function() {
     it('should delete a specific bookmark', function(done) {
       supertest(app)
-        .delete('/folders/' + folder._id + '/bookmarks/' + bookmark._id)
+        .delete('/bookmarks/' + bookmark._id)
         .set({Accept: 'application/json', Authorization: token})
         .expect('Content-Type', /json/)
         .expect(200)

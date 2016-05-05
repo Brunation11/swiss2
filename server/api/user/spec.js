@@ -2,16 +2,15 @@ var app = require('../../server'),
     request = require('supertest'),
     faker = require('faker'),
     expect = require('chai').expect,
-    UserModel = require('./model'),
-    FolderModel = require('../folder/model');
+    UserModel = require('./model');
 
 describe('[USER]'.bold.green, function() {
   var userData = {
-            firstName: faker.name.firstName(),
-        lastName: faker.name.lastName(),
-        username: faker.internet.userName(),
-        email: faker.internet.email(),
-        password: faker.internet.password()
+    firstName: faker.name.firstName(),
+    lastName: faker.name.lastName(),
+    username: faker.internet.userName(),
+    email: faker.internet.email(),
+    password: faker.internet.password()
   };
 
   describe('Model'.green, function() {
@@ -22,9 +21,9 @@ describe('[USER]'.bold.green, function() {
 
     describe('#new()'.cyan,function() {
       it('should succesfully create a new user', function(done) {
-        var user = new UserModel(userData);
-        user.setPassword(userData.password);
-        user.save(function(err, saved) {
+        var sampleUser = new UserModel(userData);
+        sampleUser.setPassword(userData.password);
+        sampleUser.save(function(err, saved) {
           expect(saved).to.be.an.instanceof(UserModel);
           expect(saved).to.have.property('firstName', userData.firstName);
           expect(saved).to.have.property('lastName', userData.lastName);
