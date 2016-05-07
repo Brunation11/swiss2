@@ -3,7 +3,8 @@ var config = require('../../config/config'),
     jwt = require('jsonwebtoken'),
     validator = require('validator'),
     mongoose = require('mongoose'),
-    Schema = mongoose.Schema;
+    Schema = mongoose.Schema,
+    deepPopulate = require('mongoose-deep-populate')(mongoose);
 
 var UserSchema = new Schema({
   firstName: {
@@ -64,6 +65,8 @@ UserSchema.methods = {
     }, config.secrets.jwt);
   }
 };
+
+UserSchema.plugin(deepPopulate);
 
 UserSchema.pre('save', function(next) {
   this.validateEmail(next);
