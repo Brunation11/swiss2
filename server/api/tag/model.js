@@ -1,6 +1,5 @@
 var mongoose = require('mongoose'),
-    Schema = mongoose.Schema,
-    deepPopulate = require('mongoose-deep-populate')(mongoose);
+    Schema = mongoose.Schema;
 
 var TagSchema = new Schema({
   name: {
