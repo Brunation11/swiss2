@@ -1,16 +1,18 @@
 var UserModel = require('../user/model'),
     BookmarkModel = require('./model'),
     _ = require('lodash'),
-    request = require('request'),
-    striptags = require('striptags');
+    request = require('request');
 
 exports.params = function(req, res, next, id) {
   BookmarkModel.findById(id)
+    .populate('tags')
     .exec(function(err, bookmark) {
       if (err) {
         next(err);
       } else if (!bookmark) {
-        next(new Error('Bookmark not found'));
+        var error = new Error('Bookmark not found');
+        res.json(error);
+        next(error);
       } else {
         req.bookmark = bookmark;
         next();
@@ -20,7 +22,7 @@ exports.params = function(req, res, next, id) {
 
 exports.get = function(req, res, next) {
   UserModel.findById(req.payload._id)
-    .populate('bookmarks')
+    .deepPopulate('bookmarks')
     .exec(function(err, user) {
       if (err) {
         next(err);
@@ -31,35 +33,12 @@ exports.get = function(req, res, next) {
 };
 
 exports.post = function(req, res, next) {
-  BookmarkModel.findOrCreate(req.body, function(err, bookmark, created) {
+  var bookmark = new BookmarkModel(req.body);
+  request(bookmark.url, function(err, response, body) {
     if (err) {
       next(err);
     } else {
-      if (created) {
-        request(bookmark.url, function(err, response, body) {
-          if (err) {
-            next(err);
-          } else {
-            bookmark.getContent(req, res, body);
-          }
-        });
-      } else {
-        UserModel.findById(req.payload._id)
-          .exec(function(err, user) {
-            if (err) {
-              next(err);
-            } else {
-              user.bookmarks.push(bookmark._id);
-              user.save(function(err, user) {
-                if (err) {
-                  next(err);
-                } else {
-                  res.json(bookmark);
-                }
-              });
-            }
-          });
-      }
+      bookmark.getContent(req, res, body);
     }
   });
 };
