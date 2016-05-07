@@ -1,92 +1,71 @@
 var UserModel = require('../user/model'),
-    FolderModel = require('./model'),
+    TagModel = require('./model'),
     _ = require('lodash');
 
 exports.params = function(req, res, next, id) {
-  FolderModel.findById(id)
-    .deepPopulate('user folders.bookmarks bookmarks')
-    .exec(function(err, folder) {
-      if (err) {
-        next(err);
-      } else if (!folder) {
-        var error = new Error('Folder not found');
+  TagModel.findById(id, function(err, tag) {
+    if (err) {
+      next(err);
+    } else if (!tag) {
+        var error = new Error('Tag not found');
         res.status(409).json({error: error});
         next(error);
       } else {
-        req.folder = folder;
+        req.tag = tag;
         next();
       }
     });
 };
 
 exports.get = function(req, res, next) {
-  FolderModel.find({user: req.payload._id}, function(err, folders) {
+  TagModel.find({}, function(err, tags) {
     if (err) {
       next(err);
-    } else if (!folders) {
-      var error = new Error('No folders found');
+    } else if (!tags) {
+      var error = new Error('No tags found');
       res.status(409).json({error: error});
       next(error);
     } else {
-      res.json(folders);
-      next();
+      res.json(tags);
     }
   });
 };
 
 exports.post = function(req, res, next) {
-  var folder = new FolderModel(req.body);
-  folder.user = req.payload._id;
-  folder.save(function(err, savedFolder) {
+  var tag = new TagModel(req.body);
+  tag.save(function(err, saved) {
     if (err) {
-      res.status(400).json({error: 'Looks like there was a problem trying to save your folder'});
+      res.status(400).json({error: 'Looks like there was a problem trying to save your tag'});
       next(err);
     } else {
-      if (req.folder) {
-        req.folder.folders.push(savedFolder._id);
-        req.folder.save(function(err, savedParentFolder) {
-          if (err) {
-            next(err);
-          }
-        });
-      } else {
-        FolderModel.findById(req.payload.rootFolder, function(err, rootFolder) {
-          rootFolder.folders.push(savedFolder._id);
-          rootFolder.save(function(err, savedRootFolder) {
-            if (err) {
-              next(err);
-            }
-          });
-        });
-      }
-      res.json(savedFolder);
+      res.json(saved);
     }
   });
 };
 
 exports.getOne = function(req, res) {
-  res.json(req.folder);
+  res.json(req.tag);
 };
 
 exports.put = function(req, res, next) {
-  var folder = req.folder;
+  var tag = req.tag;
   var update = req.body;
-  _.merge(folder, update);
-  folder.save(function(err, folder) {
+  _.merge(tag, update);
+  tag.save(function(err, saved) {
     if (err) {
       next(err);
     } else {
-      res.json(folder);
+      res.json(saved);
     }
   });
 };
 
 exports.delete = function(req, res, next) {
-  req.folder.remove(function(err, folder) {
+  req.tag.remove(function(err, tag) {
     if (err) {
       next(err);
     } else {
-      res.json(folder);
+      res.json(tag);
     }
   });
 };
