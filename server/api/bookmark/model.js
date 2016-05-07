@@ -1,11 +1,10 @@
-var fs = require('fs'),
-    striptags = require('striptags'),
-    request = require('request'),
+var striptags = require('striptags'),
     mongoosastic = require('mongoosastic'),
-    findOrCreate = require('mongoose-findorcreate'),
     mongoose = require('mongoose'),
     Schema = mongoose.Schema,
-    UserModel = require('../user/model');
+    _ = require('lodash'),
+    UserModel = require('../user/model'),
+    TagModel = require('../tag/model');
 
 var BookmarkSchema = new Schema({
   name: {
@@ -22,6 +21,7 @@ var BookmarkSchema = new Schema({
     // required: true,
     es_indexed: true
   },
+  tagString: String,
   tags: [
     {
       type: Schema.Types.ObjectId,
@@ -31,6 +31,19 @@ var BookmarkSchema = new Schema({
 });
 
 BookmarkSchema.methods = {
+  setTags: function(str) {
+    var instance = this;
+    var tagArray = str.split(", ");
+    _(tagArray).forEach(function(tag) {
+      TagModel.create({name: tag}, function(err, newTag) {
+        if (err) {
+          next(err);
+        } else {
+          instance.tags.push(newTag);
+        }
+      });
+    });
+  }
   validateName: function(next) {
     if (this.name) {
       next();
@@ -79,6 +92,5 @@ BookmarkSchema.pre('validate', function(next) {
 });
 
 BookmarkSchema.plugin(mongoosastic);
-BookmarkSchema.plugin(findOrCreate);
 
 module.exports = mongoose.model('Bookmark', BookmarkSchema);
