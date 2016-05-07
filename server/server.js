@@ -4,7 +4,7 @@ var express = require('express'),
     logger = require('./util/logger'),
     passport = require('passport'),
     userRouter = require('./api/user/routes'),
-    bookmarkRouter = require('./api/bookmark/routes');
+    bookmarkRouter = require('./api/bookmark/routes'),
     tagRouter = require('./api/tag/routes');
 
 require('mongoose').connect(config.db.url);
